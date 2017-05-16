@@ -232,8 +232,6 @@ template <class ELEMENT> class SymmetricMatrix{
 			}
 		}
 
-
-
 		ELEMENT get(unsigned int i, unsigned int j) const{
 			if (j > i)
 				return A[j][i];
@@ -250,6 +248,16 @@ template <class ELEMENT> class SymmetricMatrix{
 
 		unsigned int size() const{
 			return N;
+		}
+
+		/*
+		 * This method adds the value c in the main diagonal of this symmetric matrix.
+		 */
+		template <typename T>
+		void add_in_diagonal(const T& c){
+			for (unsigned int i = 0; i < N; i++){
+				A[i][i] = A[i][i] + c;
+			}
 		}
 
 		SymmetricMatrix<ELEMENT> operator*(const SymmetricMatrix<ELEMENT>& S){
@@ -269,7 +277,6 @@ template <class ELEMENT> class SymmetricMatrix{
 			}
 			return prod; 
 		}
-
 
 		template <typename T>
 		vector<ELEMENT> operator*(const vector<T>& v){
@@ -497,6 +504,15 @@ template <typename ELEMENT>
 SymmetricMatrix<ELEMENT> calculate_covariance(vector<vector<ELEMENT> >& data){
 	subtract_mean_column_wise(data);
 	return multiply_transpose_matrix_by_matrix(data);
+}
+
+template <typename T>
+SymmetricMatrix<T> diagonal(const T& diagonal_element, unsigned int N){
+	SymmetricMatrix<T> D(N, diagonal_element - diagonal_element);
+	for (unsigned int i = 0; i < N; i++){
+		D.set(diagonal_element, i, i);
+	}
+	return D;
 }
 
 template <typename ELEMENT>
