@@ -401,7 +401,44 @@ template <class ELEMENT> class SymmetricMatrix{
 			cout << "returning from to_usual_matrix" << endl;
 			return mat;
 		}
+
+		void power(unsigned int k){
+			if (k == 0){
+				*this = SymmetricMatrix<double>(diagonal(1.0, A.size())); // identity
+				return;
+			}
+
+			if (k == 1)
+				return;
+
+			SymmetricMatrix<double> resp(*this);
+			k /= 4; 
+
+			while(true){
+				cout << "        short int bit = " << k << "% 2; " << endl;
+				short int bit = k % 2;
+				k /= 2;
+				if (bit == 1)
+					resp = resp * (*this);
+				/* doing this to avoid the last squaring (which is useles) */
+				if (k == 0)
+					break;
+				else{
+					cout << "        B = B*B;" << endl;
+					*this = (*this) * (*this);
+				}
+			}
+			*this = resp;
+		}
+
 };
+
+template <typename ELEMENT>
+SymmetricMatrix<ELEMENT> power(const SymmetricMatrix<ELEMENT>& A, unsigned int k){
+	SymmetricMatrix<ELEMENT> B(A);
+	B.power(k);
+	return B;
+}
 
 template <typename ELEMENT>
 std::ostream& operator<<(std::ostream& os, const SymmetricMatrix<ELEMENT>& S){
