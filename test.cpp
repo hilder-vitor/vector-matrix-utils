@@ -10,7 +10,7 @@
  * 	e-mail: hilder.vitor@gmail.com
  * ****************************************************/
 int main (int argc, char** argv){
-	int N = 5;
+	int N = 7;
 	
 	vector<vector<double> > A = create_matrix(0.0, N, N);
 

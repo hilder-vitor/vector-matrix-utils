@@ -399,7 +399,6 @@ template <class ELEMENT> class SymmetricMatrix{
 					mat[i].push_back(get(i, j));
 				}
 			}
-			cout << "returning from to_usual_matrix" << endl;
 			return mat;
 		}
 
@@ -415,7 +414,6 @@ template <class ELEMENT> class SymmetricMatrix{
 			k /= 4; 
 
 			while(true){
-				cout << "        short int bit = " << k << "% 2; " << endl;
 				short int bit = k % 2;
 				k /= 2;
 				if (bit == 1)
@@ -424,7 +422,6 @@ template <class ELEMENT> class SymmetricMatrix{
 				if (k == 0)
 					break;
 				else{
-					cout << "        B = B*B;" << endl;
 					*this = (*this) * (*this);
 				}
 			}
@@ -608,8 +605,6 @@ void rec_print_cofactors_used_in_determinant(const vector<vector<ELEMENT> >& A, 
 	for (unsigned int j = 0; j < P; j++){
 		if (0 == cols_off[j]){
 			cols_off[j] = 1;
-			cout << "starting_line = " << starting_line << endl;
-			cout << "cols_off = " << cols_off << endl;
 			print_cofactor(A, starting_line, cols_off);
 
 			if (starting_line < N-1){
@@ -706,8 +701,6 @@ vector<vector<ELEMENT> > get_adjugate_matrix(vector<vector<ELEMENT> > A){
 		for(unsigned int j = 0; j < N; j++){
 			int sign = ((i+j)%2 == 0 ? 1 : -1);
 			get_submatrix(A, sub_matrix, i, j);
-			cout << "get_submatrix(A, sub_matrix, " << i << ", " << j << ");" << endl;
-			cout << sub_matrix << endl;
 			adj[j][i] = sign*determinant(sub_matrix);
 		}
 	}
@@ -725,7 +718,6 @@ void inverse(const vector<vector<T1> >& A, vector<vector<T2> >& inv){
 	}
     
 	vector<vector<T1> > adj = get_adjugate_matrix(A);
-	cout << adj << endl;
     
 	for (unsigned int i=0; i<N; i++)    
 		for (unsigned int j=0; j<N; j++)
