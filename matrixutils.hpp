@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include<iomanip>
 
 using namespace std;
 
@@ -214,16 +215,16 @@ template <class ELEMENT> class SymmetricMatrix{
 
 	public:
 
-		SymmetricMatrix(unsigned int __N, const ELEMENT& zero) : N(__N), A(__N) {
+		SymmetricMatrix(unsigned int __N, const ELEMENT& any_value) : N(__N), A(__N) {
 			#pragma omp parallel for
 			for (unsigned int i = 0; i < N; i++){
 				for (unsigned int j = 0; j <= i; j++){
-					A[i].push_back(zero);
+					A[i].push_back(any_value);
 				}
 			}
 		}
 
-		SymmetricMatrix(const vector<vector<ELEMENT> >& matrix) : N(matrix.size()), A(matrix.size()) {
+		SymmetricMatrix(const vector<vector<ELEMENT> >& matrix) : N(matrix.size()), A(matrix.size()){
 			#pragma omp parallel for
 			for (unsigned int i = 0; i < N; i++){
 				for (unsigned int j = 0; j <= i; j++){
@@ -264,7 +265,7 @@ template <class ELEMENT> class SymmetricMatrix{
 			if (S.size() != N){
 				throw std::invalid_argument("It is impossible to multiply symmetric matrices with different dimensions");
 			}
-			SymmetricMatrix<ELEMENT> prod(S.size(), S.get(0, 0));
+			SymmetricMatrix<ELEMENT> prod(S);
 			#pragma omp parallel for
 			for (unsigned int i = 0; i < N; i++){
 				for (unsigned int j = 0; j <= i; j++){
@@ -402,16 +403,15 @@ template <class ELEMENT> class SymmetricMatrix{
 			return mat;
 		}
 
+		/*******************************
+		 * 		This method is only defined for positive values of k!
+		 * 	(for k > 0)
+		 **************************************************************/
 		void power(unsigned int k){
-			if (k == 0){
-				*this = SymmetricMatrix<double>(diagonal(1.0, A.size())); // identity
-				return;
-			}
-
-			if (k == 1)
+			if (k <= 1) // for k = 1, this^1 = this
 				return;
 
-			SymmetricMatrix<double> resp(*this);
+			SymmetricMatrix<ELEMENT> resp(*this);
 			k /= 4; 
 
 			while(true){
@@ -451,6 +451,20 @@ std::ostream& operator<<(std::ostream& os, const SymmetricMatrix<ELEMENT>& S){
 	}
 	return os;
 }
+
+
+template <typename ELEMENT>
+vector<vector<ELEMENT> > create_matrix(ELEMENT default_value, unsigned int num_rows, unsigned int num_cols){
+	vector<vector<ELEMENT> > A(num_rows);
+	for (unsigned int i = 0; i < num_rows; i++){
+		for (unsigned int j = 0; j < num_cols; j++){
+			A[i].push_back(default_value);
+		}
+	}
+	return A;
+}
+
+
 
 /* This function returns the inner product of the i-th column of A by the j-th column of B */
 template <typename ELEMENT>
@@ -561,5 +575,173 @@ vector<vector<ELEMENT> > get_lines(unsigned int line, unsigned int qnt, const ve
 	}
 	return B;
 }
+
+template <typename ELEMENT>
+void print_cofactor(const vector<vector<ELEMENT> >& A, unsigned int starting_line, const vector<unsigned int>& cols_off){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+	for (unsigned int i = 0; i < starting_line; i++){
+		for (unsigned int j = 0; j < P; j++){
+			cout << "  * ";
+		}
+		cout << endl;
+	}
+
+	for (unsigned int i = starting_line; i < N; i++){
+		for (unsigned int j = 0; j < P; j++){
+			if (0 == cols_off[j])
+				cout << setw(3) << A[i][j] << " ";
+			else
+				cout << "  * ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+}
+
+template <typename ELEMENT>
+void rec_print_cofactors_used_in_determinant(const vector<vector<ELEMENT> >& A, unsigned int starting_line, vector<unsigned int>& cols_off){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+
+
+	for (unsigned int j = 0; j < P; j++){
+		if (0 == cols_off[j]){
+			cols_off[j] = 1;
+			cout << "starting_line = " << starting_line << endl;
+			cout << "cols_off = " << cols_off << endl;
+			print_cofactor(A, starting_line, cols_off);
+
+			if (starting_line < N-1){
+				rec_print_cofactors_used_in_determinant(A, starting_line + 1, cols_off);
+			}
+			cols_off[j] = 0;
+		}
+	}
+
+}
+
+template <typename ELEMENT>
+void print_cofactors_used_in_determinant(const vector<vector<ELEMENT> >& A){
+	vector<unsigned int> cols_off(A[0].size(), 0);
+	rec_print_cofactors_used_in_determinant(A, 1, cols_off);
+}
+
+
+template <typename ELEMENT>
+void get_submatrix(const vector<vector<ELEMENT> >& A, vector<vector<ELEMENT> >& cofactor, unsigned int row, unsigned int col){
+	unsigned int N = A.size();
+	for(unsigned int i = 0; i < row; i++){
+		for(unsigned int j = 0; j < col; j++){
+			cofactor[i][j] = A[i][j];
+		}
+	}
+
+	for(unsigned int i = row+1; i < N; i++){
+		for(unsigned int j = 0; j < col; j++){
+			cofactor[i-1][j] = A[i][j];
+		}
+	}
+
+	for(unsigned int i = 0; i < row; i++){
+		for(unsigned int j = col+1; j < N; j++){
+			cofactor[i][j-1] = A[i][j];
+		}
+	}
+	for(unsigned int i = row+1; i < N; i++){
+		for(unsigned int j = col + 1; j < N; j++){
+			cofactor[i-1][j-1] = A[i][j];
+		}
+	}
+}
+
+template <typename ELEMENT>
+ELEMENT rec_determinant(const vector<vector<ELEMENT> >& A, unsigned int starting_line, vector<unsigned int>& cols_off){
+	unsigned int N = A.size();
+
+	if (starting_line == N-2){
+		unsigned int first_col = 0;
+		for (; first_col < N && cols_off[first_col] != 0; first_col++);
+
+		unsigned int second_col = first_col+1;
+		for (; second_col < N && cols_off[second_col] != 0; second_col++);
+
+		return A[starting_line][first_col]*A[starting_line+1][second_col] - A[starting_line][second_col]*A[starting_line+1][first_col];
+	}
+	
+	ELEMENT d = A[0][0] - A[0][0]; // d = 0 (of type ELEMENT)
+
+	int sign = 1;
+	for (unsigned int j = 0; j < N; j++){
+		if (0 == cols_off[j]){
+			cols_off[j] = 1;
+			d += sign * A[starting_line][j] * rec_determinant(A, starting_line + 1, cols_off);
+
+			cols_off[j] = 0;
+			sign *= -1;
+		}
+	}
+	return d;
+}
+
+template <typename ELEMENT>
+ELEMENT determinant(const vector<vector<ELEMENT> >& A){
+	vector<unsigned int> cols_off(A[0].size(), 0);
+	return rec_determinant(A, 0, cols_off);
+}
+
+template <typename ELEMENT>
+vector<vector<ELEMENT> > get_adjugate_matrix(vector<vector<ELEMENT> > A){
+	unsigned int N = A.size();
+	vector<vector<ELEMENT> > adj(A);
+
+	if (1 == N){
+		adj[0][0] = 1;
+		return adj;
+	}
+	
+	vector<vector<ELEMENT> > sub_matrix(create_matrix(A[0][0], N-1, N-1));
+
+	for (unsigned int i = 0; i < N; i++){
+		for(unsigned int j = 0; j < N; j++){
+			int sign = ((i+j)%2 == 0 ? 1 : -1);
+			get_submatrix(A, sub_matrix, i, j);
+			cout << "get_submatrix(A, sub_matrix, " << i << ", " << j << ");" << endl;
+			cout << sub_matrix << endl;
+			adj[j][i] = sign*determinant(sub_matrix);
+		}
+	}
+	return adj;
+}
+
+template <typename T1, typename T2>
+void inverse(const vector<vector<T1> >& A, vector<vector<T2> >& inv){
+	unsigned int N = A.size();
+
+	T1 det_A = determinant(A);
+
+	if (det_A == 0){
+		throw std::invalid_argument("This matrix A is not invertible.");
+	}
+    
+	vector<vector<T1> > adj = get_adjugate_matrix(A);
+	cout << adj << endl;
+    
+	for (unsigned int i=0; i<N; i++)    
+		for (unsigned int j=0; j<N; j++)
+			inv[i][j] = adj[i][j] / ((T2)(det_A));
+    
+}
+
+template <typename T>
+vector<vector<T> > inverse(const vector<vector<T> >& A){
+	unsigned int N = A.size();
+	vector<vector<T> > inv(A);
+
+	inverse(A, inv);
+
+	return inv;
+}
+
 
 #endif
