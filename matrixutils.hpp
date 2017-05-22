@@ -163,13 +163,12 @@ vector<vector<ELEMENT> > operator*(const vector<vector<ELEMENT> >& A, const vect
 	
 	#pragma omp parallel for
 	for (unsigned int i = 0; i < N; i++){
-		C[i].reserve(M);
 		for (unsigned int j = 0; j < M; j++){
 			ELEMENT innerProduct = A[i][0] * B[0][j];
 			for (unsigned int k = 1; k < P; k++){
 				innerProduct = innerProduct + A[i][k] * B[k][j];
 			}
-			C[i][j] = innerProduct;
+			C[i].push_back(innerProduct);
 		}
 	}
 	return C;
@@ -476,6 +475,22 @@ ELEMENT inner_product_column_by_column(const vector<vector< ELEMENT> >& A, unsig
 }
 
 
+template <typename ELEMENT>
+vector<vector<ELEMENT> > transpose(const vector<vector<ELEMENT> >& A){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+
+	vector<vector<ELEMENT> > T(create_matrix(A[0][0], P, N));
+	for (unsigned int i = 0; i < P; i++){
+		for (unsigned int j = 0; j < N; j++){
+			T[i][j] = A[j][i];
+		}
+	}
+
+	return T;
+}
+
+
 /**
  *	Receives a NxP matrix A and returns a PxP matrix equal to transpose(A) * A.
  *
@@ -651,7 +666,7 @@ void get_submatrix(const vector<vector<ELEMENT> >& A, vector<vector<ELEMENT> >& 
 }
 
 template <typename ELEMENT>
-ELEMENT rec_determinant(const vector<vector<ELEMENT> >& A, unsigned int starting_line, vector<unsigned int>& cols_off){
+ELEMENT rec_det(const vector<vector<ELEMENT> >& A, unsigned int starting_line, vector<unsigned int>& cols_off){
 	unsigned int N = A.size();
 
 	if (starting_line == N-2){
@@ -670,7 +685,7 @@ ELEMENT rec_determinant(const vector<vector<ELEMENT> >& A, unsigned int starting
 	for (unsigned int j = 0; j < N; j++){
 		if (0 == cols_off[j]){
 			cols_off[j] = 1;
-			d += sign * A[starting_line][j] * rec_determinant(A, starting_line + 1, cols_off);
+			d += sign * A[starting_line][j] * rec_det(A, starting_line + 1, cols_off);
 
 			cols_off[j] = 0;
 			sign *= -1;
@@ -680,10 +695,83 @@ ELEMENT rec_determinant(const vector<vector<ELEMENT> >& A, unsigned int starting
 }
 
 template <typename ELEMENT>
-ELEMENT determinant(const vector<vector<ELEMENT> >& A){
+ELEMENT rec_determinant(const vector<vector<ELEMENT> >& A){
 	vector<unsigned int> cols_off(A[0].size(), 0);
-	return rec_determinant(A, 0, cols_off);
+	return rec_det(A, 0, cols_off);
 }
+
+template <typename ELEMENT>
+void switch_lines(vector<vector<ELEMENT> >& A, unsigned int i, unsigned int k){
+	if (i != k){
+		unsigned int M = A[i].size();
+		ELEMENT pivot = A[0][0];
+		for (unsigned int l = 0; l < M; l++){
+			pivot = A[i][l];
+			A[i][l] = A[k][l];
+			A[k][l] = pivot;
+		}
+	}
+}
+
+
+/********************************************************************
+ *    Perform Gaussian elimination in order to diagonalize A.
+ *    It switchs lines every time the current diagonal element is zero.
+ *    The number of switched lines is returned.
+ ***********************************************************************/
+template <typename ELEMENT>
+int diagonalize_switching_lines(vector<vector<ELEMENT> >& A){
+	unsigned int number_switched_lines = 0;
+	unsigned int N = A.size();
+	ELEMENT zero = A[0][0] - A[0][0];
+	for (unsigned int j = 0; j < N; j++){
+		if (0 == A[j][j]){
+			unsigned int largest = j;
+			for (unsigned int k = j+1; k < N; k++){
+				if (A[largest][j] < A[k][j]){
+					largest = k;
+				}
+			}
+			if (largest != j){
+				switch_lines(A, j, largest);
+				number_switched_lines++;
+			}
+		}
+		if (0 != A[j][j]){ // maybe the sub-column has only zero elements...
+			for (unsigned int i = j+1; i < N; i++){
+				ELEMENT multiplier = A[i][j] / A[j][j];	 
+				A[i] -= multiplier*A[j];
+				A[i][j] = zero;
+			}
+		}
+	}
+	return number_switched_lines;
+}
+
+template <typename ELEMENT>
+ELEMENT multiply_elements_main_diagonal(const vector<vector<ELEMENT> >& A){
+	unsigned int N = A.size();
+	ELEMENT result = A[0][0];
+	for (unsigned int i = 1; i < N; i++){
+		result *= A[i][i];
+	}
+	return result;
+}
+
+
+template <typename ELEMENT>
+ELEMENT determinant(const vector<vector<ELEMENT> >& X){
+	vector<vector<ELEMENT> > A(X);
+	unsigned int N = A.size();
+
+	unsigned int number_switched_lines = diagonalize_switching_lines(A);
+
+	if (number_switched_lines % 2 == 0)
+		return multiply_elements_main_diagonal(A);
+
+	return -multiply_elements_main_diagonal(A);
+}
+
 
 template <typename ELEMENT>
 vector<vector<ELEMENT> > get_adjugate_matrix(vector<vector<ELEMENT> > A){
@@ -707,29 +795,158 @@ vector<vector<ELEMENT> > get_adjugate_matrix(vector<vector<ELEMENT> > A){
 	return adj;
 }
 
-template <typename T1, typename T2>
-void inverse(const vector<vector<T1> >& A, vector<vector<T2> >& inv){
+template <typename T>
+T find_first_non_zero(const vector<vector<T> >& A){
 	unsigned int N = A.size();
+	unsigned int M = A[0].size();
 
-	T1 det_A = determinant(A);
+	T zero = A[0][0] - A[0][0];
 
-	if (det_A == 0){
-		throw std::invalid_argument("This matrix A is not invertible.");
+	for (unsigned int i = 0; i < N; i++){
+		for (unsigned int j = 0; j < M; j++){
+			if (zero != A[i][j])
+				return A[i][j];
+		}
 	}
-    
-	vector<vector<T1> > adj = get_adjugate_matrix(A);
-    
-	for (unsigned int i=0; i<N; i++)    
-		for (unsigned int j=0; j<N; j++)
-			inv[i][j] = adj[i][j] / ((T2)(det_A));
-    
+	return zero;
+}
+
+
+template <typename T>
+T absolute_value(T x){
+	T zero = x - x;
+	if (x < zero)
+		return -x;
+	
+	return x;
+}
+
+template <typename T>
+vector<unsigned int> PLU(const vector<vector<T> >& A, vector<vector<T> >& L, vector<vector<T> >& U){
+	unsigned int N = A.size();
+	vector<unsigned int> P(N);
+	for (unsigned int j = 0; j < N; j++)
+		P[j] = j;
+
+	U = A;
+
+	T non_zero = find_first_non_zero(A);
+	T one = non_zero / non_zero;
+
+	T zero = A[0][0] - A[0][0];
+	for (unsigned int j = 0; j < N; j++){
+		if (zero == U[j][j]){
+			unsigned int largest = j;
+			for (unsigned int k = j+1; k < N; k++){
+				if (absolute_value(U[largest][j]) < absolute_value(U[k][j])){
+					largest = k;
+				}
+			}
+			if (largest != j){
+				switch_lines(U, j, largest);
+				switch_lines(L, j, largest);
+				unsigned int pivot = P[j];
+				P[j] = P[largest];
+				P[largest] = pivot;
+			}
+		}
+		L[j][j] = one;
+		if (zero != U[j][j]){ // maybe the sub-column has only zero elements...
+			for (unsigned int i = j+1; i < N; i++){
+				T multiplier = U[i][j] / U[j][j];	 
+				U[i] -= multiplier*U[j];
+				U[i][j] = zero;
+				L[i][j] = multiplier;
+			}
+		}
+	}
+	return P;
+}
+
+template <typename T1, typename T2>
+void inverse_uper_triangular(const vector<vector<T1> >& upper_trian, vector<vector<T2> >& inv){
+	unsigned int N = upper_trian.size();
+	T2 zero = inv[0][0] - inv[0][0];
+	bool has_zero_in_diagonal = false;
+
+	for (unsigned int i = 0; i < N && !has_zero_in_diagonal; i++){
+		if (zero == upper_trian[i][i]){
+			has_zero_in_diagonal = true;
+		}
+	}
+
+	if (has_zero_in_diagonal){
+		throw std::invalid_argument("This upper triangular matrix A is not invertible.");
+	}
+
+
+	T1 one = upper_trian[0][0] / upper_trian[0][0];
+	
+	// lower triangule of inverse is zero
+	for (unsigned int i = 1; i < N; i++){
+		for (unsigned int j = 0; j < i; j++){
+			inv[i][j] = zero;
+		}
+	}
+
+	// diagonal of inverse matrix is easily calculated
+	for (unsigned int i = 0; i < N; i++){
+		inv[i][i] = one / upper_trian[i][i]; 
+	}
+
+	for (unsigned int i = 0; i < N; i++){
+		for (unsigned int j = i+1; j < N; j++){
+			T2 sum = inv[i][i] * upper_trian[i][j];
+			for (unsigned int l = i+1; l < j; l++){
+				sum += inv[i][l] * upper_trian[l][j];
+			}
+			inv[i][j] = sum / (-upper_trian[j][j]);
+		}
+	}
+}
+
+template <typename T>
+vector<vector<T> > inverse_uper_triangular(const vector<vector<T> >& A){
+	unsigned int N = A.size();
+	vector<vector<T> > inv(A);
+
+	inverse_uper_triangular(A, inv);
+
+	return inv;
+}
+
+template <typename T>
+void copy_column(vector<vector<T> >& A, const vector<vector<T> >& L, unsigned int j_A, unsigned int j_L){
+	for(unsigned int i = 0; i < A.size(); i++){
+		A[i][j_A] = L[i][j_L];
+	}
+}
+
+template <typename T1, typename T2>
+void inverse(const vector<vector<T1> >& A, vector<vector<T2> >& invA){
+	vector<vector<T2> > L(invA);
+	vector<vector<T2> > U(invA);
+
+	vector<unsigned int> P = PLU(A, L, U);
+	T2 zero = L[0][0]-L[0][0];
+	T2 one =  L[0][0];
+
+	inverse_uper_triangular(U, invA); // now invA = U^-1
+	inverse_uper_triangular(transpose(L), U); // now U = L^-1
+	
+	L = invA * transpose(U); // now L = U^-1 * L^-1
+
+	// apply the inverse permutation P to obtain the inverse of A
+	for (unsigned int i = 0; i < P.size(); i++){
+		copy_column(invA, L, P[i], i);
+	}
 }
 
 template <typename T>
 vector<vector<T> > inverse(const vector<vector<T> >& A){
 	unsigned int N = A.size();
 	vector<vector<T> > inv(A);
-
+	
 	inverse(A, inv);
 
 	return inv;
