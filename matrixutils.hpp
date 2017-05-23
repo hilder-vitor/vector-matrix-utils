@@ -578,6 +578,43 @@ SymmetricMatrix<T> diagonal(const T& diagonal_element, unsigned int N){
 	return D;
 }
 
+template <typename T>
+vector<vector<T> > get_non_zero_rows(const vector<vector<T> >& A){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+	T zero = A[0][0] - A[0][0];
+	vector<vector<T> > B;
+	for (unsigned int i = 0; i < N; i++){
+		unsigned int j;
+		for (j = 0; j < N && zero == A[i][j]; j++);
+		// if some non-zero value was found in this column
+		if (j < P){
+			B.push_back(A[i]);
+		}
+	}
+	return B;
+}
+
+template <typename T>
+vector<vector<T> > get_non_zero_columns(const vector<vector<T> >& A){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+	T zero = A[0][0] - A[0][0];
+	vector<vector<T> > B(N);
+	for (unsigned int j = 0; j < P; j++){
+		// testing if j-th column is null
+		unsigned int i;
+		for (i = 0; i < N && zero == A[i][j]; i++);
+		// if some non-zero value was found in this column
+		if (i < N){
+			for (unsigned int l = 0; l < N; l++){
+				B[l].push_back(A[l][j]);
+			}
+		}
+	}
+	return B;
+}
+
 template <typename ELEMENT>
 vector<vector<ELEMENT> > get_lines(unsigned int line, unsigned int qnt, const vector<vector<ELEMENT> >& A){
 	unsigned int N = A.size();

@@ -17,7 +17,7 @@ vector<vector<double> > random_matrix(unsigned int N, unsigned int M){
 	std::random_device rd;  //Will be used to obtain a seed for the random number engine
     
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_int_distribution<> dis(-50, 50);
+	std::uniform_int_distribution<> dis(-100, 100);
 	
 	vector<vector<double> > A = create_matrix(0.0, N, N);
 		  
@@ -66,13 +66,12 @@ bool test_identity(const vector<vector<double> >& A){
 
 
 int main (int argc, char** argv){
-	int N = 100;
+	int N = 10;
 	
 	vector<vector<double> > A = random_matrix(N, N);
 	
 	cout << "matrix A" << endl;
 	cout << A << endl;
-
 	cout << "determinant(A)" << endl;
 	double d = determinant(A);
 	cout << d << endl << endl;
@@ -99,6 +98,6 @@ int main (int argc, char** argv){
 		cout << "ERROR: this matrix is not the identity" << endl;
 		return 1;
 	}
-
+	
 	return 0;
 }
