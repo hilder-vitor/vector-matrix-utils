@@ -66,12 +66,13 @@ bool test_identity(const vector<vector<double> >& A){
 
 
 int main (int argc, char** argv){
-	int N = 10;
+	int N = 20;
 	
 	vector<vector<double> > A = random_matrix(N, N);
 	
 	cout << "matrix A" << endl;
 	cout << A << endl;
+	
 	cout << "determinant(A)" << endl;
 	double d = determinant(A);
 	cout << d << endl << endl;

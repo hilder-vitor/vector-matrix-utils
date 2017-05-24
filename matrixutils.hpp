@@ -596,17 +596,37 @@ vector<vector<T> > get_non_zero_rows(const vector<vector<T> >& A){
 }
 
 template <typename T>
-vector<vector<T> > get_non_zero_columns(const vector<vector<T> >& A){
+vector<unsigned int> get_indices_non_zero_columns(const vector<vector<T> >& A){
 	unsigned int N = A.size();
 	unsigned int P = A[0].size();
 	T zero = A[0][0] - A[0][0];
-	vector<vector<T> > B(N);
+	vector<unsigned int> indices;
 	for (unsigned int j = 0; j < P; j++){
 		// testing if j-th column is null
 		unsigned int i;
 		for (i = 0; i < N && zero == A[i][j]; i++);
 		// if some non-zero value was found in this column
 		if (i < N){
+			indices.push_back(j);
+		}
+	}
+	return indices;
+}
+
+template <typename T>
+vector<vector<T> > remove_columns(const vector<vector<T> >& A, const vector<unsigned int>& indices_cols){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+	T zero = A[0][0] - A[0][0];
+	vector<vector<T> > B(N);
+	for (unsigned int j = 0; j < P; j++){
+		bool is_in_indices_cols = false;
+		unsigned i = 0;
+		while (i < indices_cols.size() && !is_in_indices_cols){
+			is_in_indices_cols = (j == indices_cols[i]);
+			i++;
+		}
+		if (is_in_indices_cols){
 			for (unsigned int l = 0; l < N; l++){
 				B[l].push_back(A[l][j]);
 			}
@@ -614,6 +634,14 @@ vector<vector<T> > get_non_zero_columns(const vector<vector<T> >& A){
 	}
 	return B;
 }
+
+template <typename T>
+vector<vector<T> > get_non_zero_columns(const vector<vector<T> >& A){
+	vector<unsigned int> indices = get_indices_non_zero_columns(A);
+	return remove_columns(A, indices);
+}
+
+
 
 template <typename ELEMENT>
 vector<vector<ELEMENT> > get_lines(unsigned int line, unsigned int qnt, const vector<vector<ELEMENT> >& A){
