@@ -474,6 +474,18 @@ ELEMENT inner_product_column_by_column(const vector<vector< ELEMENT> >& A, unsig
 	return inner_product;
 }
 
+/* This function returns the inner product of the i-th row of A by the j-th row of B */
+template <typename ELEMENT>
+ELEMENT inner_product_row_by_row(const vector<vector< ELEMENT> >& A, unsigned int i, const vector<vector<ELEMENT> >& B, unsigned int j){
+	unsigned int P = A[0].size();
+	ELEMENT inner_product = A[i][0] * B[j][0];
+
+	for (unsigned int k = 1; k < P; k++){
+		inner_product = inner_product + A[i][k] * B[j][k];
+	}
+	return inner_product;
+}
+
 
 template <typename ELEMENT>
 vector<vector<ELEMENT> > transpose(const vector<vector<ELEMENT> >& A){
@@ -498,6 +510,7 @@ vector<vector<ELEMENT> > transpose(const vector<vector<ELEMENT> >& A){
 template <typename ELEMENT>
 SymmetricMatrix<ELEMENT> multiply_transpose_matrix_by_matrix(const vector<vector< ELEMENT> >& A){
 	unsigned int P = A[0].size();
+	cout << "     P = " << P << endl;
 
 	SymmetricMatrix<ELEMENT> C(P, A[0][0]);
 	#pragma omp parallel for
@@ -508,7 +521,6 @@ SymmetricMatrix<ELEMENT> multiply_transpose_matrix_by_matrix(const vector<vector
 	}
 	return C;
 }
-
 
 template <typename ELEMENT>
 vector<vector<ELEMENT> > outer_product(const vector<ELEMENT>& u, const vector<ELEMENT>& v){
@@ -538,6 +550,33 @@ SymmetricMatrix<ELEMENT> outer_product(const vector<ELEMENT>& u){
 	}
 	return O;
 }
+
+
+/**
+ *	Receives a NxP matrix A and returns a PxP matrix equal to transpose(A) * A.
+ *
+*/
+template <typename ELEMENT>
+SymmetricMatrix<ELEMENT> multiply_transpose_matrix_by_matrix2(const vector<vector< ELEMENT> >& A){
+	unsigned int N = A.size();
+	unsigned int P = A[0].size();
+	cout << "     P = " << P << endl;
+
+	SymmetricMatrix<ELEMENT> C(outer_product(A[0]));
+	#pragma omp parallel for
+	for (unsigned int k = 1; k < N; k++){
+/*		calculating C += outer_product(i-th row of A) in place*/
+		for (unsigned int i = 0; i < P; i++){
+			for (unsigned int j = 0; j <= i; j++){
+				C.set(C.get(i, j) + A[k][i] * A[k][j], i, j);
+			}
+		}
+
+	}
+	return C;
+}
+
+
 
 template <typename ELEMENT>
 ELEMENT mean_of_column(const vector<vector<ELEMENT> >& A, unsigned int j){

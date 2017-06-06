@@ -19,7 +19,7 @@ vector<vector<double> > random_matrix(unsigned int N, unsigned int M){
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	std::uniform_int_distribution<> dis(-100, 100);
 	
-	vector<vector<double> > A = create_matrix(0.0, N, N);
+	vector<vector<double> > A = create_matrix(0.0, N, M);
 		  
 	for (int i=0; i < N; i++){	
 		for (int j = 0; j < M; j++){
@@ -52,13 +52,13 @@ bool test_identity(const vector<vector<double> >& A){
 
 	for (unsigned int i = 0; i < N; i++){
 		for (unsigned int j = 0; j < M; j++){
-			if (i != j){
-				if (!(-EPSILON < A[i][j] && A[i][j] < EPSILON))
-					return false;
-			}else{
-				if (!(1.0 - EPSILON < A[i][j] && A[i][j] < 1.0 + EPSILON))
-					return false;
-			}
+				if (i != j){
+					if (!(-EPSILON < A[i][j] && A[i][j] < EPSILON))
+							return false;
+				}else{
+					if (!(1.0 - EPSILON < A[i][j] && A[i][j] < 1.0 + EPSILON))
+						return false;
+				}
 		}
 	}
 	return true;
@@ -66,10 +66,21 @@ bool test_identity(const vector<vector<double> >& A){
 
 
 int main (int argc, char** argv){
-	int N = 10;
+	int N = 60000;
+	int P = 700;
+
+
+	cout << "vector<vector<double> > X = random_matrix(N, P);" << endl;
+	vector<vector<double> > X = random_matrix(N, P);
+	cout << "X.size() = " << X.size() << endl;
+	cout << "X[0].size() = " << X[0].size() << endl;
+
+	cout << "SymmetricMatrix<double> A = multiply_transpose_matrix_by_matrix(X);" << endl;
+	SymmetricMatrix<double> A = multiply_transpose_matrix_by_matrix2(X);
+
+	return 0;
 	
-	vector<vector<double> > A = random_matrix(N, N);
-	
+	/*
 	cout << "matrix A" << endl;
 	cout << A << endl;
 	cout << "determinant(A)" << endl;
@@ -98,6 +109,6 @@ int main (int argc, char** argv){
 		cout << "ERROR: this matrix is not the identity" << endl;
 		return 1;
 	}
-	
+	*/
 	return 0;
 }
