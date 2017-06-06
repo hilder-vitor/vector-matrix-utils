@@ -66,6 +66,7 @@ bool test_identity(const vector<vector<double> >& A){
 
 
 int main (int argc, char** argv){
+<<<<<<< HEAD
 	int N = 60000;
 	int P = 700;
 
@@ -83,6 +84,7 @@ int main (int argc, char** argv){
 	/*
 	cout << "matrix A" << endl;
 	cout << A << endl;
+	
 	cout << "determinant(A)" << endl;
 	double d = determinant(A);
 	cout << d << endl << endl;
