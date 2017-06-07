@@ -66,22 +66,19 @@ bool test_identity(const vector<vector<double> >& A){
 
 
 int main (int argc, char** argv){
-<<<<<<< HEAD
-	int N = 60000;
-	int P = 700;
-
+	int N = 9;
+	int P = 5;
 
 	cout << "vector<vector<double> > X = random_matrix(N, P);" << endl;
 	vector<vector<double> > X = random_matrix(N, P);
-	cout << "X.size() = " << X.size() << endl;
-	cout << "X[0].size() = " << X[0].size() << endl;
+
+	print_double_matrix(X);
 
 	cout << "SymmetricMatrix<double> A = multiply_transpose_matrix_by_matrix(X);" << endl;
-	SymmetricMatrix<double> A = multiply_transpose_matrix_by_matrix2(X);
+	vector<vector<double> > A = multiply_transpose_matrix_by_matrix(X).to_usual_matrix();
 
-	return 0;
+	print_double_matrix(A);
 	
-	/*
 	cout << "matrix A" << endl;
 	cout << A << endl;
 	
@@ -111,6 +108,6 @@ int main (int argc, char** argv){
 		cout << "ERROR: this matrix is not the identity" << endl;
 		return 1;
 	}
-	*/
+
 	return 0;
 }

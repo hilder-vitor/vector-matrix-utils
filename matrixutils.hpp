@@ -232,13 +232,13 @@ template <class ELEMENT> class SymmetricMatrix{
 			}
 		}
 
-		ELEMENT get(unsigned int i, unsigned int j) const{
+		inline ELEMENT get(unsigned int i, unsigned int j) const{
 			if (j > i)
 				return A[j][i];
 			return A[i][j];
 		}
 
-		void set(const ELEMENT& x, unsigned int i, unsigned int j){
+		inline void set(const ELEMENT& x, unsigned int i, unsigned int j){
 			if (j > i){
 				A[j][i] = ELEMENT(x);
 			}else{
@@ -246,7 +246,7 @@ template <class ELEMENT> class SymmetricMatrix{
 			}
 		}
 
-		unsigned int size() const{
+		inline unsigned int size() const{
 			return N;
 		}
 
@@ -503,25 +503,6 @@ vector<vector<ELEMENT> > transpose(const vector<vector<ELEMENT> >& A){
 }
 
 
-/**
- *	Receives a NxP matrix A and returns a PxP matrix equal to transpose(A) * A.
- *
-*/
-template <typename ELEMENT>
-SymmetricMatrix<ELEMENT> multiply_transpose_matrix_by_matrix(const vector<vector< ELEMENT> >& A){
-	unsigned int P = A[0].size();
-	cout << "     P = " << P << endl;
-
-	SymmetricMatrix<ELEMENT> C(P, A[0][0]);
-	#pragma omp parallel for
-	for (unsigned int i = 0; i < P; i++){
-		for (unsigned int j = 0; j <= i; j++){
-			C.set(inner_product_column_by_column(A, i, A, j), i, j);
-		}
-	}
-	return C;
-}
-
 template <typename ELEMENT>
 vector<vector<ELEMENT> > outer_product(const vector<ELEMENT>& u, const vector<ELEMENT>& v){
 	if (u.size() != v.size()){
@@ -557,10 +538,9 @@ SymmetricMatrix<ELEMENT> outer_product(const vector<ELEMENT>& u){
  *
 */
 template <typename ELEMENT>
-SymmetricMatrix<ELEMENT> multiply_transpose_matrix_by_matrix2(const vector<vector< ELEMENT> >& A){
+SymmetricMatrix<ELEMENT> multiply_transpose_matrix_by_matrix(const vector<vector< ELEMENT> >& A){
 	unsigned int N = A.size();
 	unsigned int P = A[0].size();
-	cout << "     P = " << P << endl;
 
 	SymmetricMatrix<ELEMENT> C(outer_product(A[0]));
 	#pragma omp parallel for
