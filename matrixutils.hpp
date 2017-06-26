@@ -91,8 +91,7 @@ vector<ELEMENT> operator*(const vector<vector<ELEMENT> >& A, const vector<ELEMEN
 	unsigned int N = A.size();
 	unsigned int M = A[0].size();
 
-	vector<ELEMENT> resp;
-	resp.reserve(M);
+	vector<ELEMENT> resp(N, A[0][0]);
 
 	#pragma omp parallel for
 	for (unsigned int i = 0; i < N; i++){
@@ -100,7 +99,7 @@ vector<ELEMENT> operator*(const vector<vector<ELEMENT> >& A, const vector<ELEMEN
 		for (unsigned int j = 1; j < M; j++){
 			innerProd = innerProd + A[i][j] * v[j];
 		}
-		resp.push_back(innerProd);
+		resp[i] = innerProd;
 	}
 	return resp;
 }
