@@ -1,3 +1,13 @@
+/******************************************************	
+ * 	Author: Hilder Vitor Lima Pereira 
+ *
+ * 	e-mail: hilder.vitor@gmail.com
+ *
+ * 	This file is available in the repository
+ * 	https://github.com/hilder-vitor/vector-matrix-utils
+ *	Read the LICENSE therein before using it.
+ * ****************************************************/
+
 #ifndef ___MATRIX_UTILS_BASICS
 #define ___MATRIX_UTILS_BASICS
 
@@ -1034,6 +1044,5 @@ vector<vector<T> > inverse(const vector<vector<T> >& A){
 
 	return inv;
 }
-
 
 #endif

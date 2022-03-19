@@ -1,3 +1,13 @@
+/******************************************************	
+ * 	Author: Hilder Vitor Lima Pereira 
+ *
+ * 	e-mail: hilder.vitor@gmail.com
+ *
+ * 	This file is available in the repository
+ * 	https://github.com/hilder-vitor/vector-matrix-utils
+ *	Read the LICENSE therein before using it.
+ * ****************************************************/
+
 #ifndef ___VECTOR_UTILS_BASICS
 #define ___VECTOR_UTILS_BASICS
 
